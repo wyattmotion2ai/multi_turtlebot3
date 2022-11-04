@@ -1,0 +1,39 @@
+global_costmap:
+  global_frame: map
+  robot_base_frame: turtlebot01/base_link
+
+  update_frequency: 10.0
+  publish_frequency: 10.0
+  transform_tolerance: 0.5
+
+#   static_map: true
+
+  width: 50
+  height: 50
+  resolution: 0.075
+
+  rolling_window: false
+  track_unknown_space: true
+  
+  footprint: [[-0.205, -0.155], [-0.205,0.155], [0.077, 0.155], [0.077, -0.155]]
+
+  plugins: 
+      - {name: static,    type: "costmap_2d::StaticLayer"}            
+      - {name: sensor,    type: "costmap_2d::ObstacleLayer"}
+      - {name: inflation, type: "costmap_2d::InflationLayer"}
+
+  static:        
+      map_topic: /map 
+      subscribe_to_updates: true
+
+  sensor:
+      observation_sources: laser
+      laser_scan_sensor: {sensor_frame: turtlebot01/base_scan, data_type: LaserScan, topic: turtlebot01/scan, marking: true, clearing: true}
+
+  inflation:
+      inflation_radius: 2.5
+      cost_scaling_factor: 6.0
+
+
+
+

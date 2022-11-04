@@ -1,0 +1,50 @@
+<launch>
+  
+    <arg name="model" default="waffle_pi"/>
+
+    <!-- No namespace here as we will share this description.
+       Access with slash at the beginning -->
+    <!-- <include file="$(find turtlebot3_bringup)/launch/includes/description.launch.xml">
+        <arg name="model" value="$(arg model)" />
+    </include> -->
+
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d $(find turtlebot3_navigation)/rviz/multi.rviz"/>
+
+    <!-- Run the map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="/root/docker/motion2ai/multi_agent_planning/multi_agent_planning/data/maps/map.yaml" >
+      <param name="frame_id" value="map" />
+    </node>
+
+
+    <!-- BEGIN ROBOT 1-->
+    <group ns="turtlebot01">
+        <arg name="tf_prefix" default="turtlebot01"/>
+        <param  name="robot_description" textfile="$(find turtlebot3_description)/urdf/turtlebot3_waffle_pi.urdf.xacro" />
+
+        <!-- <node pkg="tf" type="static_transform_publisher" name="map_to_base_footprint" args="0 0 0 0 0 0 /$(arg tf_prefix)/odom /$(arg tf_prefix)/base_footprint 50"/>  -->
+        <!-- <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 map /$(arg tf_prefix)/odom 50"/>  -->
+        <!-- <node pkg="tf" type="static_transform_publisher" name="base_scan_to_base_link" args="0 0 0 0 0 0 /$(arg tf_prefix)/base_link /$(arg tf_prefix)/base_scan 50"/>  -->
+        <!-- <node pkg="tf" type="static_transform_publisher" name="base_scan_to_base_link" args="0 0 0 0 0 0 /$(arg tf_prefix)/base_link /$(arg tf_prefix)/scan 50"/>  -->
+        <!-- <node pkg="tf" type="static_transform_publisher" name="base_scan_to_bk" args="0 0 0 0 0 0 /$(arg tf_prefix)/scan base_scan 50"/>  -->
+
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+            <param name="publish_frequency" type="double" value="50.0" />
+            <param name="tf_prefix" value="$(arg tf_prefix)"/>
+        </node>
+
+
+        <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
+            <arg name="tf_prefix" value="$(arg tf_prefix)"/>
+        </include>
+        <include file="$(find turtlebot3_navigation)/launch/amcl_robot.launch">
+            <arg name="tf_prefix" value="$(arg tf_prefix)"/>
+            <arg name="x_pose" value="0.0"/>
+            <arg name="y_pose" default="0.1"/>
+            <arg name="Y_pose" default="0.0"/>
+        </include>
+
+    </group>
+
+
+
+</launch>

@@ -1,0 +1,49 @@
+<launch>
+
+  <arg name="tf_prefix" default="turtlebot01"/>
+	
+  <!-- odom_frame_id and base_frame_id MUST begin with /$(arg tf_prefix). It needs to include -->	
+  <!-- the tf_prefix because this move_base module is local to a specific robot and not some global -->
+  <!-- system. However, for some reason a / MUST come before the tf_prefix otherwise an error is -->
+  <!-- generated. This is strange because it implies that if a / were not attached at the beginning -->
+  <!-- the path would NOT default to the global /, but to some other prefix. I have no idea why that is.-->
+  <!-- The global_frame_id is simply /map, since all the robot are sharing a commong map. -->
+  <arg name="odom_frame_id"   default="$(arg tf_prefix)/odom"/>
+  <arg name="base_frame_id"   default="$(arg tf_prefix)/base_footprint"/>
+  <arg name="global_frame_id" default="map"/>
+  
+  <!-- Here the odom_topic and the laser_topic are set to odom and scan and NOT /odom and /scan because -->
+  <!-- we want to access the local topics used by a particular robot in a namespace and NOT a global -->
+  <!-- topic like one that would be published by a regular single robot system -->
+  <arg name="odom_topic" default="odom" />
+  <arg name="laser_topic" default="scan"/>
+  
+	
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/costmap_common_params_waffle_pi.yaml" command="load" ns="global_costmap"/>
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/costmap_common_params_waffle_pi.yaml" command="load" ns="local_costmap"/>   
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/local_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/global_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/dwa_local_planner_params_waffle_pi.yaml" command="load" />
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/move_base_params.yaml" command="load"/>
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/global_planner_params.yaml" command="load"/>
+    <rosparam file="$(find turtlebot3_navigation)/multi_param/$(arg tf_prefix)/navfn_global_planner_params.yaml" command="load"/>
+    
+    
+    <!-- Reset frame_id parameters using user input data -->
+    <param name="global_costmap/global_frame" value="$(arg global_frame_id)"/>
+    <param name="global_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
+    <param name="local_costmap/global_frame" value="$(arg odom_frame_id)"/>
+    <param name="local_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
+    <param name="DWAPlannerROS/global_frame_id" value="$(arg odom_frame_id)"/>
+
+    <remap from="cmd_vel" to="navigation_velocity_smoother/raw_cmd_vel"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <remap from="scan" to="$(arg laser_topic)"/>
+  </node>
+  
+  <!-- Tune the turtlebot's max acceleration so that it doesn't overshoot on sharp turns -->
+  <param name="move_base/DWAPlannerROS/max_vel_theta" value="1.0"/>
+  <param name="move_base/DWAPlannerROS/acc_lim_theta" value="10.0"/>
+  
+</launch>
